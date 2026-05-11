@@ -1,0 +1,119 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+struct Sale
+{
+    string product;
+    int quantity;
+    double price;
+    double total;
+};
+
+int main()
+{
+    string fileName = "sales.csv";
+
+    ifstream file(fileName);
+
+    if (!file)
+    {
+        cout << "Error: Could not open file.\n";
+        return 1;
+    }
+
+    vector<Sale> sales;
+
+    string line;
+
+    // Skip header
+    getline(file, line);
+
+    while (getline(file, line))
+    {
+        stringstream ss(line);
+
+        Sale s;
+
+        string quantityStr, priceStr;
+
+        getline(ss, s.product, ',');
+        getline(ss, quantityStr, ',');
+        getline(ss, priceStr, ',');
+
+        s.quantity = stoi(quantityStr);
+        s.price = stod(priceStr);
+        s.total = s.quantity * s.price;
+
+        sales.push_back(s);
+    }
+
+    file.close();
+
+    double grandTotal = 0;
+    int totalItems = 0;
+
+    cout << "\n========== SALES REPORT ==========\n\n";
+
+    cout << left
+         << setw(20) << "Product"
+         << setw(10) << "Qty"
+         << setw(15) << "Price"
+         << setw(15) << "Total"
+         << endl;
+
+    cout << string(60, '-') << endl;
+
+    for (const auto& s : sales)
+    {
+        cout << left
+             << setw(20) << s.product
+             << setw(10) << s.quantity
+             << setw(15) << fixed << setprecision(2) << s.price
+             << setw(15) << s.total
+             << endl;
+
+        grandTotal += s.total;
+        totalItems += s.quantity;
+    }
+
+    cout << string(60, '-') << endl;
+
+    cout << "\nTotal Items Sold : " << totalItems << endl;
+    cout << "Grand Total      : ₹" << fixed << setprecision(2)
+         << grandTotal << endl;
+
+    // Save summary report
+    ofstream report("report.txt");
+
+    if (report)
+    {
+        report << "========== SALES SUMMARY ==========\n\n";
+
+        for (const auto& s : sales)
+        {
+            report << s.product
+                   << " | Qty: " << s.quantity
+                   << " | Total: ₹" << fixed << setprecision(2)
+                   << s.total << endl;
+        }
+
+        report << "\n-----------------------------------\n";
+        report << "Total Items Sold : " << totalItems << endl;
+        report << "Grand Total      : ₹" << grandTotal << endl;
+
+        report.close();
+
+        cout << "\nReport saved to report.txt\n";
+    }
+    else
+    {
+        cout << "\nCould not create report file.\n";
+    }
+
+    return 0;
+}
