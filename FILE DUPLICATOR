@@ -1,0 +1,124 @@
+#include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <unordered_map>
+#include <vector>
+#include <iomanip>
+
+namespace fs = std::filesystem;
+using namespace std;
+
+// Function to calculate a simple file hash
+string calculateHash(const fs::path& filePath)
+{
+    ifstream file(filePath, ios::binary);
+
+    if (!file)
+        return "";
+
+    unsigned long long hash = 0;
+    char ch;
+
+    while (file.get(ch))
+    {
+        hash = hash * 101 + static_cast<unsigned char>(ch);
+    }
+
+    return to_string(hash);
+}
+
+int main()
+{
+    string sourceFolder;
+    string duplicateFolder;
+
+    cout << "===== FILE DEDUPLICATOR =====\n\n";
+
+    cout << "Enter source folder path: ";
+    getline(cin, sourceFolder);
+
+    cout << "Enter duplicate folder path: ";
+    getline(cin, duplicateFolder);
+
+    // Create duplicate folder if it doesn't exist
+    try
+    {
+        if (!fs::exists(duplicateFolder))
+        {
+            fs::create_directories(duplicateFolder);
+        }
+    }
+    catch (const exception& e)
+    {
+        cout << "Error creating duplicate folder: " << e.what() << endl;
+        return 1;
+    }
+
+    unordered_map<string, fs::path> fileHashes;
+    int duplicateCount = 0;
+
+    try
+    {
+        for (const auto& entry : fs::recursive_directory_iterator(sourceFolder))
+        {
+            // Skip directories
+            if (!entry.is_regular_file())
+                continue;
+
+            fs::path filePath = entry.path();
+
+            cout << "Checking: " << filePath.filename() << endl;
+
+            string hash = calculateHash(filePath);
+
+            if (hash.empty())
+            {
+                cout << "Could not read file.\n";
+                continue;
+            }
+
+            // Check if hash already exists
+            if (fileHashes.find(hash) != fileHashes.end())
+            {
+                cout << "Duplicate Found: " << filePath.filename() << endl;
+
+                fs::path destination =
+                    fs::path(duplicateFolder) / filePath.filename();
+
+                // Prevent overwrite
+                int counter = 1;
+
+                while (fs::exists(destination))
+                {
+                    destination =
+                        fs::path(duplicateFolder) /
+                        (filePath.stem().string() +
+                         "_" +
+                         to_string(counter) +
+                         filePath.extension().string());
+
+                    counter++;
+                }
+
+                fs::rename(filePath, destination);
+
+                cout << "Moved to: " << destination << "\n\n";
+
+                duplicateCount++;
+            }
+            else
+            {
+                fileHashes[hash] = filePath;
+            }
+        }
+
+        cout << "\n===== SCAN COMPLETE =====\n";
+        cout << "Duplicates moved: " << duplicateCount << endl;
+    }
+    catch (const exception& e)
+    {
+        cout << "Error: " << e.what() << endl;
+    }
+
+    return 0;
+}
