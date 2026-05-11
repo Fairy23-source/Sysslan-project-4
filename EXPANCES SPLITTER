@@ -1,0 +1,77 @@
+#include <iostream>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+int main()
+{
+    int people;
+
+    cout << "===== EXPENSE SPLITTER =====\n\n";
+
+    cout << "Enter number of people: ";
+    cin >> people;
+
+    vector<string> names(people);
+    vector<double> paid(people);
+
+    // Input names
+    cout << "\nEnter names:\n";
+
+    for (int i = 0; i < people; i++)
+    {
+        cout << "Person " << i + 1 << ": ";
+        cin >> names[i];
+    }
+
+    // Input expenses
+    cout << "\nEnter amount paid by each person:\n";
+
+    double totalExpense = 0;
+
+    for (int i = 0; i < people; i++)
+    {
+        cout << names[i] << ": ₹";
+        cin >> paid[i];
+
+        totalExpense += paid[i];
+    }
+
+    double share = totalExpense / people;
+
+    cout << fixed << setprecision(2);
+
+    cout << "\n========== EXPENSE SUMMARY ==========\n";
+
+    cout << "\nTotal Expense : ₹" << totalExpense;
+    cout << "\nEach Person Pays : ₹" << share << "\n";
+
+    cout << "\n--------------------------------------\n";
+
+    for (int i = 0; i < people; i++)
+    {
+        double balance = paid[i] - share;
+
+        cout << names[i] << " ";
+
+        if (balance > 0)
+        {
+            cout << "should RECEIVE ₹" << balance;
+        }
+        else if (balance < 0)
+        {
+            cout << "should PAY ₹" << -balance;
+        }
+        else
+        {
+            cout << "is SETTLED";
+        }
+
+        cout << endl;
+    }
+
+    cout << "--------------------------------------\n";
+
+    return 0;
+}
