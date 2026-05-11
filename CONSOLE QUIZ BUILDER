@@ -1,0 +1,244 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+struct Question
+{
+    string question;
+    string option1;
+    string option2;
+    string option3;
+    string option4;
+    int correctAnswer;
+};
+
+void createQuiz()
+{
+    ofstream file("quiz.txt");
+
+    if (!file)
+    {
+        cout << "Error creating quiz file.\n";
+        return;
+    }
+
+    int n;
+
+    cout << "\n===== CREATE QUIZ =====\n";
+    cout << "Enter number of questions: ";
+    cin >> n;
+
+    cin.ignore();
+
+    for (int i = 0; i < n; i++)
+    {
+        Question q;
+
+        cout << "\nQuestion " << i + 1 << ":\n";
+
+        cout << "Enter question: ";
+        getline(cin, q.question);
+
+        cout << "Option 1: ";
+        getline(cin, q.option1);
+
+        cout << "Option 2: ";
+        getline(cin, q.option2);
+
+        cout << "Option 3: ";
+        getline(cin, q.option3);
+
+        cout << "Option 4: ";
+        getline(cin, q.option4);
+
+        cout << "Correct option number (1-4): ";
+        cin >> q.correctAnswer;
+
+        cin.ignore();
+
+        // Save to file
+        file << q.question << endl;
+        file << q.option1 << endl;
+        file << q.option2 << endl;
+        file << q.option3 << endl;
+        file << q.option4 << endl;
+        file << q.correctAnswer << endl;
+    }
+
+    file.close();
+
+    cout << "\nQuiz created successfully!\n";
+}
+
+vector<Question> loadQuiz()
+{
+    vector<Question> quiz;
+
+    ifstream file("quiz.txt");
+
+    if (!file)
+    {
+        cout << "Quiz file not found.\n";
+        return quiz;
+    }
+
+    while (!file.eof())
+    {
+        Question q;
+
+        getline(file, q.question);
+
+        if (q.question.empty())
+            break;
+
+        getline(file, q.option1);
+        getline(file, q.option2);
+        getline(file, q.option3);
+        getline(file, q.option4);
+
+        file >> q.correctAnswer;
+        file.ignore();
+
+        quiz.push_back(q);
+    }
+
+    file.close();
+
+    return quiz;
+}
+
+void takeQuiz()
+{
+    vector<Question> quiz = loadQuiz();
+
+    if (quiz.empty())
+    {
+        cout << "\nNo quiz available.\n";
+        return;
+    }
+
+    string studentName;
+
+    cout << "\n===== TAKE QUIZ =====\n";
+    cout << "Enter your name: ";
+    cin.ignore();
+    getline(cin, studentName);
+
+    int score = 0;
+
+    for (size_t i = 0; i < quiz.size(); i++)
+    {
+        cout << "\nQuestion " << i + 1 << ":\n";
+        cout << quiz[i].question << endl;
+
+        cout << "1. " << quiz[i].option1 << endl;
+        cout << "2. " << quiz[i].option2 << endl;
+        cout << "3. " << quiz[i].option3 << endl;
+        cout << "4. " << quiz[i].option4 << endl;
+
+        int answer;
+
+        cout << "Enter your answer (1-4): ";
+        cin >> answer;
+
+        if (answer == quiz[i].correctAnswer)
+        {
+            score++;
+        }
+    }
+
+    double percentage =
+        (static_cast<double>(score) / quiz.size()) * 100;
+
+    cout << "\n===== RESULT =====\n";
+    cout << "Student Name : " << studentName << endl;
+    cout << "Score        : " << score
+         << "/" << quiz.size() << endl;
+
+    cout << "Percentage   : "
+         << fixed << setprecision(2)
+         << percentage << "%\n";
+
+    // Store results
+    ofstream resultFile("results.txt", ios::app);
+
+    if (resultFile)
+    {
+        resultFile << "Name: " << studentName
+                   << " | Score: " << score
+                   << "/" << quiz.size()
+                   << " | Percentage: "
+                   << fixed << setprecision(2)
+                   << percentage << "%\n";
+
+        resultFile.close();
+    }
+}
+
+void viewResults()
+{
+    ifstream file("results.txt");
+
+    if (!file)
+    {
+        cout << "\nNo results found.\n";
+        return;
+    }
+
+    cout << "\n===== STORED RESULTS =====\n\n";
+
+    string line;
+
+    while (getline(file, line))
+    {
+        cout << line << endl;
+    }
+
+    file.close();
+}
+
+int main()
+{
+    int choice;
+
+    do
+    {
+        cout << "\n========== QUIZ BUILDER ==========\n";
+        cout << "1. Create Quiz (Admin)\n";
+        cout << "2. Take Quiz\n";
+        cout << "3. View Results\n";
+        cout << "4. Exit\n";
+
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+            case 1:
+                createQuiz();
+                break;
+
+            case 2:
+                takeQuiz();
+                break;
+
+            case 3:
+                viewResults();
+                break;
+
+            case 4:
+                cout << "\nExiting program...\n";
+                break;
+
+            default:
+                cout << "\nInvalid choice.\n";
+        }
+
+    } while (choice != 4);
+
+    return 0;
+}
